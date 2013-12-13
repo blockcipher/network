@@ -1,13 +1,28 @@
 #include "tcp.h"
+void connProc(SOCKET s, struct sockaddr_in* clientAddr){
+    printf("tcp server connProc\n");
+    send(s, "hello world\n", 13, 0);
+}
 //接受处理
-static void server(SOCKET s, struct sockaddr_in* clientAddr){
-    printf("accepted one connect\n");
+static void server(SOCKET s){
+    SOCKET cs;
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrLen = 0;
+    //接受连接
+    do{
+        printf("waiting for connecting...\n");
+        clientAddrLen = sizeof(clientAddr);
+        cs = accept(s, (struct sockaddr*)&clientAddr, &clientAddrLen);
+        if(!isvalidsock(cs)){
+            error(1, errno, "accept failed");
+        }
+        connProc(cs, &clientAddr);
+        CLOSE(cs);
+    }while(1);
 }
 
 int main(int argc, char** argv){
-    SOCKET s, cs;
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = 0;
+    SOCKET s;
     char* hName = NULL;
     char* sName = NULL;
     //初始化
@@ -24,16 +39,6 @@ int main(int argc, char** argv){
     }
     printf("input host:%s, port: %s\n", hName, sName);
     s = tcp_server_socket(hName, sName);
-    //接受连接
-    do{
-        printf("waiting for connecting...\n");
-        clientAddrLen = sizeof(clientAddr);
-        cs = accept(s, (struct sockaddr*)&clientAddr, &clientAddrLen);
-        if(!isvalidsock(cs)){
-            error(1, errno, "accept failed");
-        }
-        server(cs, &clientAddr);
-        CLOSE(cs);
-    }while(1);
+    server(s);
     EXIT(0);
 }
