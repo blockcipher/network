@@ -27,7 +27,8 @@ typedef int SOCKET;
 #define set_errno(e) errno = (e)
 void error(int status, int err, char* fmt, ...);
 //´´½¨tcp socket
-SOCKET tcp_socket(char* hName, char* sName);
+SOCKET tcp_server_socket(const char* hName, const char* sName);
+SOCKET tcp_client_socket(const char* hName, const char* sName, struct sockaddr_in* serverAddr);
 
 #endif
 
