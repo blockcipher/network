@@ -1,20 +1,17 @@
+#include "tcpServer.h"
 
-char** programName = NULL;
-#define EXIT(s) exit(s)
-#define CLOSE(s) if(close(s)) error(1, errno, "close failed")
-#define set_errno(e) errno = (e)
-#define isvalidsock(s) ((s) > 0)
+char* program_name = NULL;
 //错误处理
-void error(status, int err, char* fmt, ...){
+void error(int status, int err, char* fmt, ...){
     //输出定制消息
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stderr, "%s:", programName);
-    vfprint(stderr, fmt, ap);
+    fprintf(stderr, "%s:\n", program_name);
+    vfprintf(stderr, fmt, ap);
     va_end(ap);
     //输出错误消息和错误码
     if(err){
-        fprintf(stderr, ":%s (%d)\n", strerror(err), err)
+        fprintf(stderr, ":%s (%d)\n", strerror(err), err);
     }
     //是否退出
     if(status){
@@ -22,17 +19,14 @@ void error(status, int err, char* fmt, ...){
     }
 }
 
-//网络模块初始化
-void INIT(){
-}
 //输入
 //    本地ip
 //    本地端口
 //    协议
 //输出
 //    本地socket
-static void set_address(struct sockadd_in* sockAddr, const char* hName,
-                        char* sName, char* protocol){
+static void set_address(struct sockaddr_in* sockAddr, const char* hName,
+                        const char* sName, const char* protocol){
     struct servent* sp;
     struct hostent* hp;
     char* endptr;
@@ -47,18 +41,36 @@ static void set_address(struct sockadd_in* sockAddr, const char* hName,
                 error(1, 0, "unknown host:%s\n", hName);
             }
             //hName是域名且获取到了ip
-            sockAddr->sin_addr = (struct in_addr*)hp->h_addr;
+            sockAddr->sin_addr = *(struct in_addr*)hp->h_addr;
         }
     }
     else{
         //没有输入则使用任意地址
-        sockAddr->sin_addr = htonl(INADDR_ANY);
+        sockAddr->sin_addr.s_addr = htonl(INADDR_ANY);
     }
 }
-
-int main(int argc char* argv){
+//创建tcp socket
+SOCKET tcp_socket(char* hName, char* sName){
+    SOCKET s;
     struct sockaddr_in localAddr;
-    struct sockaddr_in peerAddr;
-    //初始化
-    INIT();
+    const char* protocol = "tcp";
+    const int on = 1;
+    //设置本地地址
+    set_address(&localAddr, hName, sName, protocol);
+    //生成socket
+    s = socket(AF_INET, SOCK_STREAM, 0);
+    if(!isvalidsock(s)){
+        error(1, errno, "socket call failed, host:%s, port:%s, protocol:%s",
+              hName, sName, protocol);
+    }
+    if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))){
+        error(1, errno, "setsockopt failed");
+    }
+    if(bind(s, (struct sockaddr*)&localAddr, sizeof(localAddr))){
+        error(1, errno, "bind failed");
+    }
+    if(listen(s, NLISTEN)){
+        error(1, errno, "listen failed");
+    }
+    return s;
 }
