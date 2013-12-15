@@ -1,5 +1,5 @@
-#ifndef __tcp_server_h__
-#define __tcp_server_h__
+#ifndef __udp_server_h__
+#define __udp_server_h__
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
