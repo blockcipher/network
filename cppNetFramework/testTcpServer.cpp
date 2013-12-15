@@ -1,4 +1,4 @@
-#include "tcp.h"
+#include "netFrame.h"
 void connProc(SOCKET s, struct sockaddr_in* clientAddr){
     printf("tcp server connProc\n");
     send(s, "hello world\n", 13, 0);
