@@ -11,6 +11,18 @@
 
 #include <ngx_config.h>
 
+/////////////////////////////////////////////////////////
+//  socket的抽象
+//    熟悉
+//        唯一标识 ngx_socket_t
+//        阻塞
+//        push
+//    方法
+//        创建  socket()
+//        关闭读写操作 shutdown()
+//        回收socket描述符 close()  
+//        阻塞设置ioctl和fcntl
+//        小包处理设置      TCP_NODELAY和TCP_CORK都是禁用Nagle算法，只不过NODELAY完全关闭而TCP_CORK完全由自己决定发送时机
 
 #define NGX_WRITE_SHUTDOWN SHUT_WR
 
